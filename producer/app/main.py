@@ -3,6 +3,11 @@ from mongo_connection import MongoDB
 import time
 
 client = MongoDB()
+if client:
+    print('mongodb client is connected')
+else:
+    print('client is not connected')
+
 n = 40
 
 def get_records():
@@ -15,6 +20,7 @@ def get_records():
                 else:
                     records = client.get_n_records(n=n, skip=n)
                 if not records:
+                    print('All records are sent to Kafka.')
                     break
             except Exception as e:
                 print(e)
@@ -27,3 +33,6 @@ def get_records():
                 except Exception as e:
                     print(e)
     return True
+
+
+get_records()

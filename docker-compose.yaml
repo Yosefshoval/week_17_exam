@@ -76,11 +76,11 @@ services:
 
 
 
-  Producer:
-    image: kafka-mongo-api:v1
-    container_name: kafka-mongo-api
-    ports:
-      - '8085:8085'
+  producer:
+    build:
+      context: /producer/
+      dockerfile: Dockerfile
+    container_name: kafka-mongo-producer
 
     environment:
       KAFKA_TOPIC: 'users.registered'
@@ -90,7 +90,7 @@ services:
 
 
     depends_on:
-      MySQL:
+      MongoDB:
         condition: service_healthy
       Kafka:
         condition: service_healthy

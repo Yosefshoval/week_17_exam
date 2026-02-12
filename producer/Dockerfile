@@ -1,4 +1,13 @@
-FROM ubuntu:latest
-LABEL authors="menachem shoval"
+FROM python:3.11-slim
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY ./app .
+
+HEALTHCHECK CMD ["CMD", "nc", "-z", "localhost", "27017"]
+
+CMD ["python", "main.py"]
