@@ -55,7 +55,7 @@ services:
       - kafka_kraft:/var/lib/kafka/data
 
 
-  MySQL:
+  mysql:
     image: mysql:8.0
     container_name: Operation_Black_Ledger_mysql
     restart: unless-stopped
@@ -98,16 +98,22 @@ services:
 
 
   Consumer:
-    image: consumer-mongo:v1 #TODO
-    container_name: consumer-mongo #TODO
+    build:
+      context: /consumer/
+      dockerfile: Dockerfile
+    container_name: kafka-mongo-consumer
 
     environment:
-      KAFKA_TOPIC: 'users.registered'
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: analytics
+      MYSQL_PASSWORD: analytics123
+      MYSQL_DATABASE: analytics
 
     depends_on:
       Kafka:
         condition: service_healthy
-      MySQL:
+      mysql:
         condition: service_healthy
 
   Analytics_API:
