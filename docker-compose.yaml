@@ -3,7 +3,7 @@ version: '3.8'
 services:
   MongoDB:
     image: docker.io/library/mongo:7.0
-    container_name: mongodb_kafka
+    container_name: Operation_Black_Ledger_mongo
     restart: always
     ports:
       - '27017:27017'
@@ -17,7 +17,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: kafka_users #TODO to change.
+      MONGO_INITDB_DATABASE: Operation_Black_Ledger_mongodb
 
     volumes:
       - mongo_data:/data/db
@@ -83,14 +83,16 @@ services:
       - '8085:8085'
 
     environment:
-      MONGODB_COLLECTION: 'kafka_users'
+      KAFKA_TOPIC: 'users.registered'
+      MONGODB_COLLECTION: 'Operation_Black_Ledger_mongodb'
+      MONGODB_DATABASE: 'Operation_Black_Ledger_mongodb'
       MONGO_URI: 'mongodb://root:password@mongodb:27017/?authSource=admin'
 
 
     depends_on:
       MySQL:
         condition: service_healthy
-      kafka:
+      Kafka:
         condition: service_healthy
 
 
@@ -103,7 +105,7 @@ services:
       KAFKA_TOPIC: 'users.registered'
 
     depends_on:
-      kafka:
+      Kafka:
         condition: service_healthy
       MySQL:
         condition: service_healthy
@@ -121,8 +123,8 @@ volumes:
 
 
 
-- MYSQL_HOST=mysql
-- MYSQL_PORT=3306
-- MYSQL_USER=analytics
-- MYSQL_PASSWORD=analytics123
-- MYSQL_DATABASE=analytics
+#- MYSQL_HOST=mysql
+#- MYSQL_PORT=3306
+#- MYSQL_USER=analytics
+#- MYSQL_PASSWORD=analytics123
+#- MYSQL_DATABASE=analytics

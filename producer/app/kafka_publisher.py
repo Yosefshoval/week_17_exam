@@ -17,6 +17,7 @@ def callback(err, msg):
 
 
 def flush_message(message : dict):
+    if message.get("_id"): message["_id"] = str(message["_id"])
     if message.get("orderDate"): message["orderDate"] = str(message["orderDate"])
     if message.get("shippedDate"): message["shippedDate"] = str(message["shippedDate"])
     if message.get("requiredDate"): message["requiredDate"] = str(message["requiredDate"])
