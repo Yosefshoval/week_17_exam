@@ -1,35 +1,37 @@
+import time
 import mysql.connector
-import os
-
-MYSQL_HOST = os.getenv("SQL_HOST")
-MYSQL_PORT = os.getenv("SQL_PORT")
-MYSQL_USER = os.getenv("SQL_USER")
-MYSQL_PASSWORD = os.getenv("SQL_PASSWORD")
-MYSQL_DATABASE = os.getenv("SQL_DATABASE")
-
-
 
 class MySQLDB:
     def __init__(self, host, port, user, password, database):
-        self.config = {
-            'host': host,
-            'port': port,
-            'user': user,
-            'password': password
-        }
-        self.database = database
+        self.host = 'mysql',
+        self.port = 3307,
+        self.user = 'analytics',
+        self.password = 'analytics123'
+        self.database = 'analytics'
         self.connection = None
 
 
     def get_connection(self):
-        self.connection = mysql.connector.connect(**self.config)
+        for _ in range(5):
+            try:
+                self.connection = mysql.connector.connect(
+                    host=self.host,
+                    port=self.port,
+                    user=self.user,
+                    password=self.password
+                )
+                break
+            except Exception as e:
+                print(e)
+                time.sleep(0.5)
+
 
         if not self.connection.is_connected:
             raise ConnectionError("Couldn't connect to the database")
 
         return self.connection
 
-    def create_table(self):
+    def create_tables(self):
         cnx = self.get_connection()
         create_customer = """
            CREATE TABLE IF NOT EXISTS customer (
@@ -73,6 +75,7 @@ class MySQLDB:
 
 
     def insert_record(self, record: dict):
+        cnx = self.get_connection()
         if not record.get('type'):
             return False
         table = record['type']
@@ -100,7 +103,7 @@ class MySQLDB:
         else:
             return False
 
-        with self.connection.cursor(dictionary=True) as cursor:
+        with cnx.cursor(dictionary=True) as cursor:
             cursor.execute(f"USE {self.database}")
             cursor.execute(sql_statement)
             cursor.execute(f'SELECT COUNT(*) FROM {table};')

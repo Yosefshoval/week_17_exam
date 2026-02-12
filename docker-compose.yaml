@@ -60,7 +60,7 @@ services:
     container_name: Operation_Black_Ledger_mysql
     restart: unless-stopped
     ports:
-      - "3306:3306"
+      - "3307:3307"
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: analytics
@@ -97,15 +97,16 @@ services:
 
 
 
-  Consumer:
+  consumer:
     build:
       context: /consumer/
       dockerfile: Dockerfile
     container_name: kafka-mongo-consumer
 
     environment:
+      KAFKA_TOPIC: users.registered
       MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
+      MYSQL_PORT: 3307
       MYSQL_USER: analytics
       MYSQL_PASSWORD: analytics123
       MYSQL_DATABASE: analytics
