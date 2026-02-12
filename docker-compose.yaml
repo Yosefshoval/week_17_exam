@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  MongoDB:
+    image: docker.io/library/mongo:7.0
+    container_name: mongodb_kafka
+    restart: always
+    ports:
+      - '27017:27017'
+
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: kafka_users #TODO to change.
+
+    volumes:
+      - mongo_data:/data/db
+
+  Kafka:
+    image: confluentinc/cp-kafka:7.8.3
+    container_name: kafka
+    ports:
+      - "9092:9092"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "nc -z localhost 9092 || exit 1" ]
+      interval: 5s
+      timeout: 15s
+      retries: 10
+      start_period: 20s
+
+    environment:
+      KAFKA_KRAFT_MODE: 'true'
+
+      CLUSTER_ID: '1L6g7nGhU-eAKfL--X25wo'
+      KAFKA_NODE_ID: 1
+
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+    volumes:
+      - kafka_kraft:/var/lib/kafka/data
+
+
+  MySQL:
+    image: mysql:8.0
+    container_name: Operation_Black_Ledger_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: analytics
+      MYSQL_USER: analytics
+      MYSQL_PASSWORD: analytics123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 90s
+      timeout: 5s
+      retries: 5
+
+
+
+  Producer:
+    image: kafka-mongo-api:v1
+    container_name: kafka-mongo-api
+    ports:
+      - '8085:8085'
+
+    environment:
+      MONGODB_COLLECTION: 'kafka_users'
+      MONGO_URI: 'mongodb://root:password@mongodb:27017/?authSource=admin'
+
+
+    depends_on:
+      MySQL:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+
+  Consumer:
+    image: consumer-mongo:v1 #TODO
+    container_name: consumer-mongo #TODO
+
+    environment:
+      KAFKA_TOPIC: 'users.registered'
+
+    depends_on:
+      kafka:
+        condition: service_healthy
+      MySQL:
+        condition: service_healthy
+
+  Analytics_API:
+    build:
+      context: ''
+      dockerfile: Dockerfile
+
+
+volumes:
+  kafka_kraft:
+  mongo_data:
+  mysql_data:
+
+
+
+- MYSQL_HOST=mysql
+- MYSQL_PORT=3306
+- MYSQL_USER=analytics
+- MYSQL_PASSWORD=analytics123
+- MYSQL_DATABASE=analytics
